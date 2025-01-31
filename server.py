@@ -1,6 +1,7 @@
-from flask import Flask, request
+from flask import Flask, render_template, request
 from http import HTTPStatus
 import json
+from config import db
 
 app = Flask(__name__)
 
@@ -27,19 +28,35 @@ def about():
     }
     return json.dumps(name), HTTPStatus.OK
 
+@app.get("/about-me")
+def about_me():
+    # return "<h1>This is the about me page</h1>", HTTPStatus.OK
+    user_name = "Chris"
+    return render_template("about-me.html", name = user_name)
+
 products = []
+
+# Fix the id from MongoDB
+def fix_id(obj):
+    obj["_id"] = str(obj["_id"])
+    return obj
 
 # GET
 @app.get("/api/products")
 def get_products():
-    return json.dumps(products), HTTPStatus.OK
+    products_db = []
+    cursor = db.products.find({})
+    for product in cursor:
+        products_db.append(fix_id(product))
+    return json.dumps(products_db), HTTPStatus.OK
 
 # POST
 @app.post("/api/products")
 def save_product():
     product = request.get_json()
     print(f"product {product}")
-    products.append(product)
+    # products.append(product)
+    db.products.insert_one(product)
     return "Product saved", 201
 
 # PUT
@@ -60,8 +77,9 @@ def delete_product(index):
     print(f"Delete {index}")
 
     if index >= 0 and index < len(products):
-        deletect_product = products.pop(index)
-        return json.dumps(deletect_product), HTTPStatus.OK
+        # deletect_product = products.pop(index)
+        # return json.dumps(deletect_product), HTTPStatus.OK
+        db.products.delete_one({"_id": products[index]["_id"]})
     else:
         return "Product not found", HTTPStatus.NOT_FOUND
 
