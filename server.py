@@ -5,9 +5,22 @@ from config import db
 
 app = Flask(__name__)
 
+### Endpoints
+
+# This is a JSON implementation
+@app.get("/test")
+def test():
+    return "This is another endpoint", 200
+
+# Home page
 @app.get("/")
 def home():
-    return "Hello from flask"
+    return "<h1>Hello from flask, this is the home page</h1>", HTTPStatus.OK
+
+# About page
+@app.get("/about")
+def about():
+    return "<h1>This is the about page</h1>", HTTPStatus.OK
 
 # @app.post("/")
 # @app.put("/")
@@ -15,19 +28,7 @@ def home():
 # @app.delete("/")
 # if I don't have some method, than means that method is not valid
 
-@app.get("/test")
-def test():
-    return "This is another endpoint", 200
-
-# This is a JSON implementation
-@app.get("/api/about")
-def about():
-    name = {
-        "name" : "Chris",
-        "last_name" : "Bonilla"
-    }
-    return json.dumps(name), HTTPStatus.OK
-
+# About me page
 @app.get("/about-me")
 def about_me():
     # return "<h1>This is the about me page</h1>", HTTPStatus.OK
@@ -82,5 +83,11 @@ def delete_product(index):
         db.products.delete_one({"_id": products[index]["_id"]})
     else:
         return "Product not found", HTTPStatus.NOT_FOUND
+    
+# Count the number of products
+@app.get("/api/products/count")
+def count_products():
+    product_count = db.products.count_documents({})
+    return json.dumps({"total": product_count}), HTTPStatus.OK
 
 app.run(debug = True)
